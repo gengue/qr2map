@@ -1,0 +1,98 @@
+{% load staticfiles %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width">
+        <title>QR2Map</title>
+        <link rel="stylesheet" href="{% static "css/bootstrap.min.css" %}">
+        <style type="text/css" media="screen">
+            #map_canvas {
+                width: 100%;
+                height: 500px;
+            }
+            body{
+                background-color: black; 
+            }
+        </style>
+    </head>
+    <body>
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">Travel Adventures - Santa Marta</a>
+            </div>
+        </div>
+    </nav>
+    <section>
+        <article>
+           <div class="row">
+                <div class="col-md-8 col-md-offset-2">
+                    <div class="jumbotron" style="border-radius : 10px; padding: 5px;">
+                      <h3>Lugares de interes cercanos a <span style="color:red">{{ place.name }}</span></h3>
+                        <div id="map_canvas"></div>
+                    </div>
+                </div>
+           </div>   
+        </article>
+    </section>
+    </body>
+    <script src="http://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <script src="http://maps.google.com/maps/api/js?sensor=false&.js"></script>
+    <script src="{% static "js/bootstrap.min.js" %}"></script>
+    <script type="text/javascript" charset="utf-8">
+        var places_of_interest = {{ places_of_interest_json |safe}} 
+        var place = {{ place_json |safe}} 
+
+        $(document).ready(function () {
+            var place_loc = place[0].fields.location.split(",");
+            var map;
+            var elevator;
+            var myOptions = {
+                zoom: 15,
+                center: new google.maps.LatLng(place_loc[0], place_loc[1]),
+                mapTypeId: 'terrain'
+            };
+            map = new google.maps.Map($('#map_canvas')[0], myOptions);
+
+            var here_loc = new google.maps.LatLng(place_loc[0], place_loc[1]);
+
+            new google.maps.Marker({
+                position: here_loc,
+                map: map,
+                icon: 'http://maps.google.com/mapfiles/kml/shapes/man.png' 
+            });
+
+            for (var x = 0; x < places_of_interest.length; x++) {
+                    console.log(places_of_interest[x]);
+                    var p = places_of_interest[x].fields.location.split(",");
+                    var latlng = new google.maps.LatLng(p[0], p[1]);
+                    var marker = new google.maps.Marker({
+                        position: latlng,
+                        map: map
+                    });
+                    addInfoWindow(marker, places_of_interest[x].fields.name);
+
+            }
+
+            function addInfoWindow(marker, message) {
+                var infoWindow = new google.maps.InfoWindow({
+                    content: message
+                });
+
+                infoWindow.open(map, marker);
+
+                google.maps.event.addListener(marker, 'click', function () {
+                    infoWindow.open(map, marker);
+                });
+            }
+
+        });
+    </script>
+</html>
